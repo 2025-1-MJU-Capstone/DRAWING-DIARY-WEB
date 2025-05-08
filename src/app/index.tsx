@@ -1,21 +1,15 @@
-import { Text, View, StyleSheet } from "react-native";
-
+import { useSession } from "../stores/store/auth-context";
+import { Text } from "react-native";
+import { Redirect } from "expo-router";
 export default function Index() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text}>HOME SCREEN.</Text>
-    </View>
-  );
-}
+  const { session, isLoading } = useSession();
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "black",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  text: {
-    color: "white",
-  },
-});
+  if (isLoading) {
+    return <Text>Loading...</Text>;
+  }
+
+  if (!session) {
+    return <Redirect href='../(auth)/sign-in' />;
+  }
+  return <Redirect href='../(app)/home' />;
+}
