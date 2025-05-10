@@ -4,6 +4,8 @@ import {
   StyleSheet,
   Text,
   ImageSourcePropType,
+  StyleProp,
+  ViewStyle,
 } from "react-native";
 
 interface ButtonProps {
@@ -12,6 +14,7 @@ interface ButtonProps {
   label: string;
   backgroundColor: string;
   icon?: ImageSourcePropType;
+  style?: StyleProp<ViewStyle>;
 }
 
 export default function Button({
@@ -20,11 +23,15 @@ export default function Button({
   label,
   backgroundColor,
   icon,
+  style,
 }: ButtonProps) {
   const buttonStyle =
     theme === "primary" ? styles.primaryContainer : styles.secondaryContainer;
   return (
-    <Pressable onPress={onPress} style={[buttonStyle, { backgroundColor }]}>
+    <Pressable
+      onPress={onPress}
+      style={[buttonStyle, { backgroundColor }, style]}
+    >
       {icon && (
         <Image
           style={{ width: 18, height: 18, marginRight: 5 }}
