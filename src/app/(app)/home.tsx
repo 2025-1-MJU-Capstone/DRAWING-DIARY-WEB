@@ -1,18 +1,30 @@
+import Button from "@/src/components/button";
+import CustomCalender from "@/src/components/custom-calender";
 import { useSession } from "@/src/stores/store/auth-context";
-import { Text, View } from "react-native";
+import { router } from "expo-router";
+import { StyleSheet, Text, View } from "react-native";
 
 export default function Index() {
-  const { signOut } = useSession();
   return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <Text
+    <View style={styles.container}>
+      <CustomCalender />
+      <Button
+        theme='primary'
+        label='일기쓰러가기'
+        backgroundColor='#FFECA5'
         onPress={() => {
-          // The `app/(app)/_layout.tsx` will redirect to the sign-in screen.
-          signOut();
+          router.push("/(app)/write-diary");
         }}
-      >
-        Sign Out
-      </Text>
+      />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "space-around",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+  },
+});

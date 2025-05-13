@@ -25,18 +25,9 @@ export default function AppLayout() {
       }}
     >
       <Tabs.Screen
-        name='view-diary'
-        options={{
-          tabBarLabel: "일기보기",
-          tabBarIcon: ({ color, size }) => (
-            <Entypo name='book' size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name='write-diary'
         options={{
-          tabBarLabel: "일기쓰기",
+          tabBarLabel: "일기",
           tabBarIcon: ({ color, size }) => (
             <Entypo name='pencil' size={size} color={color} />
           ),
