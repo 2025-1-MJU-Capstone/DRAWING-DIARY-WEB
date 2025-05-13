@@ -38,6 +38,12 @@
         {
           "fonts": ["./assets/fonts/PretendardVariable.ttf"]
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "앱이 사진앱에 접근할거임요."
+        }
       ]
     ],
     "experiments": {
