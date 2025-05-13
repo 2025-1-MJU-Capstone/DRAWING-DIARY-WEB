@@ -13,6 +13,7 @@ interface ButtonProps {
   onPress?: () => void;
   label: string;
   backgroundColor: string;
+  disabled?: boolean;
   icon?: ImageSourcePropType;
   style?: StyleProp<ViewStyle>;
 }
@@ -24,6 +25,7 @@ export default function Button({
   backgroundColor,
   icon,
   style,
+  disabled,
 }: ButtonProps) {
   const buttonStyle =
     theme === "primary" ? styles.primaryContainer : styles.secondaryContainer;
@@ -31,6 +33,7 @@ export default function Button({
     <Pressable
       onPress={onPress}
       style={[buttonStyle, { backgroundColor }, style]}
+      disabled={disabled}
     >
       {icon && (
         <Image
