@@ -59,13 +59,13 @@ export default function FontMake() {
           theme='primary'
           label='제출하기'
           backgroundColor='#FFECA5'
-          onPress={() => router.push("/(landing)/font-make")}
+          onPress={() => router.push("/(landing)/drawing-style")}
         />
         <Button
           theme='primary'
           label='건너뛰기'
           backgroundColor='#D9D9D9'
-          // onPress={() => router.push("/(landing)/drawing-style")}
+          onPress={() => router.push("/(landing)/drawing-style")}
         />
       </View>
     </View>

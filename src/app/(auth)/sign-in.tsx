@@ -1,15 +1,10 @@
 import { router, useRouter } from "expo-router";
 import { StyleSheet, Text, View, Image } from "react-native";
-import { useSession } from "../../stores/store/auth-context";
 import Button from "@/src/components/button";
 
 export default function SignIn() {
-  const { signIn } = useSession();
   const router = useRouter();
-  const handleLogin = async () => {
-    await signIn();
-    router.replace("/(app)/home");
-  };
+
   return (
     <View style={styles.container}>
       <Image
@@ -18,20 +13,13 @@ export default function SignIn() {
       />
       <View style={styles.buttonContainer}>
         <Button
-          onPress={handleLogin}
+          onPress={async () => router.push("/(auth)/login")}
           theme='primary'
           label='이메일로그인'
           backgroundColor='#FFD6E0'
           style={{ marginVertical: 5 }}
         />
-        <Button
-          icon={require("@/assets/images/kakao-logo.png")}
-          backgroundColor='#FEE500'
-          onPress={handleLogin}
-          theme='primary'
-          label='카카오 로그인'
-          style={{ marginVertical: 5 }}
-        />
+
         <Button
           onPress={async () => router.replace("/(auth)/sign-up")}
           theme='primary'
@@ -51,7 +39,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "#FFFDF8",
-    paddingVertical: 55,
+    paddingVertical: 100,
     marginTop: 30,
   },
   logoImage: {

@@ -57,7 +57,12 @@ export default function DrawingStyle() {
                 value={selectedMood === opt.id}
                 onValueChange={() => setSelectedMood(opt.id)}
               />
-              <Text style={styles.optionLabel}>{opt.label}</Text>
+              <Text
+                onPress={() => setSelectedMood(opt.id)}
+                style={styles.optionLabel}
+              >
+                {opt.label}
+              </Text>
             </View>
           ))}
         </View>
@@ -71,7 +76,12 @@ export default function DrawingStyle() {
                 value={selectedColor === opt.id}
                 onValueChange={() => setSelectedColor(opt.id)}
               />
-              <Text style={styles.optionLabel}>{opt.label}</Text>
+              <Text
+                onPress={() => setSelectedColor(opt.id)}
+                style={styles.optionLabel}
+              >
+                {opt.label}
+              </Text>
             </View>
           ))}
         </View>
