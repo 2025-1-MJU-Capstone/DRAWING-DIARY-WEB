@@ -29,7 +29,6 @@ export default function CustomCalender() {
 const styles = StyleSheet.create({
   container: {
     width: 306,
-    height: 150,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
