@@ -1,9 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-interface DrawingStyleProps {
+export interface DrawingStyleProps {
   feeling: "realistic" | "cinematic" | "storybook";
   color: "crayon" | "paint" | "pencil";
-  customPrompt: string;
+  customStyle: string;
 }
 
 export async function saveDrawingStyle(
