@@ -1,6 +1,6 @@
 import Button from "@/src/components/button";
 import CustomCalender from "@/src/components/custom-calender";
-import { useMonthDiaryStore } from "@/src/stores/store/diary/month-list";
+import { useMonthDiaryStore } from "@/src/stores/store/diary/month-list.store";
 import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 200,
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#FFFDF8",
     justifyContent: "flex-start",
   },
   diaryInfoContainer: {

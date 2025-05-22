@@ -2,7 +2,7 @@ import { Text } from "react-native";
 import { Redirect, Stack, Tabs } from "expo-router";
 import Entypo from "@expo/vector-icons/Entypo";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useSession } from "@/src/stores/store/auth-context";
+import { useSession } from "@/src/stores/store/auth-context.store";
 
 export default function AppLayout() {
   const { session, isLoading } = useSession();
