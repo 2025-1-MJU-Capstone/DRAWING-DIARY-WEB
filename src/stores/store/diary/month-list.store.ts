@@ -6,7 +6,6 @@ export interface DiaryEntry {
   diaryDate: string;
   title: string;
 }
-
 interface MonthDiaryListState {
   diaryList: DiaryEntry[];
   selectedDiary?: DiaryEntry;
