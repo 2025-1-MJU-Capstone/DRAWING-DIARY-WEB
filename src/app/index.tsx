@@ -1,4 +1,4 @@
-import { useSession } from "../stores/store/auth-context";
+import { useSession } from "../stores/store/auth-context.store";
 import { Text } from "react-native";
 import { Redirect } from "expo-router";
 export default function Index() {
