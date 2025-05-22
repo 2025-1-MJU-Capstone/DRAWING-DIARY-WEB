@@ -1,5 +1,5 @@
 import Button from "@/src/components/button";
-import { useSession } from "@/src/stores/store/auth-context";
+import { useSession } from "@/src/stores/store/auth-context.store";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Text, TextInput, View, StyleSheet, SafeAreaView } from "react-native";
@@ -9,7 +9,7 @@ export default function Login() {
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
   const handleLogin = async () => {
-    await signIn();
+    await signIn({ loginId: id, password: password });
     router.replace("/(app)/home");
   };
   return (
