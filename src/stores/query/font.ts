@@ -1,87 +1,75 @@
 import { springInstance } from "@/src/utils/axios-instance";
 import { useStorageState } from "@/src/utils/secure-storage-state";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-export interface DiaryCreateParams {
-  diaryDate: string;
-  title: string;
-  content: string;
-  fontId: number;
-  feeling: string;
-  color: string;
-  customStyle?: string;
+interface FontsPayload {
+  images: File;
+  fontName: string;
 }
 
-export interface DiaryListItem {
+interface FontsDetail {
   id: number;
-  diaryDate: string;
-  title: string;
-}
-
-export interface DiaryDetail {
-  diaryDate: string;
-  title: string;
-  content: string;
-  imageUrl: string;
-  fontId: number;
+  fontName: string;
+  ttfUrl: string;
   createdAt: string;
 }
-
 export interface PatchFontParams {
   fontId: number;
 }
 
 const [session] = useStorageState("session");
 
-export const diaryApi = {
-  createDiary: async (
-    params: DiaryCreateParams
-  ): Promise<{ id: number; imageUrl: string; createdAt: string }> => {
-    const { data } = await springInstance.post("diaries", params, {
-      headers: {
-        "Authorization": `Bearer ${session}`,
-      },
-    });
-    return data;
-  },
-
-  fetchMonthlyDiaries: async (
-    year: number,
-    month: number
-  ): Promise<DiaryListItem[]> => {
-    const query = `?year=${year}&month=${String(month).padStart(2, "0")}`;
-    const { data } = await springInstance.get(`diaries${query}`, {
-      headers: {
-        "Authorization": `Bearer ${session}`,
-      },
-    });
-    return data;
-  },
-
-  fetchDiaryById: async (id: number): Promise<DiaryDetail> => {
-    const { data } = await springInstance.get(`diaries/${id}`, {
-      headers: {
-        "Authorization": `Bearer ${session}`,
-      },
-    });
-    return data;
-  },
-
-  deleteDiary: async (id: number): Promise<void> => {
-    await springInstance.delete(`diaries/${id}`, {
-      headers: {
-        "Authorization": `Bearer ${session}`,
-      },
-    });
-  },
-
-  patchDiaryFont: async (
-    id: number,
-    params: PatchFontParams
-  ): Promise<void> => {
-    await springInstance.patch(`diaries/${id}/font`, params, {
-      headers: {
-        "Authorization": `Bearer ${session}`,
-      },
-    });
-  },
+const fontApi = {
+  createFont: (payload: FontsPayload) =>
+    springInstance
+      .post("/fonts", payload, {
+        headers: {
+          "Authorization": `Bearer ${session}`,
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      .then(() => {}),
+  fetchFonts: () =>
+    springInstance
+      .get<FontsDetail[]>("/fonts", {
+        headers: {
+          "Authorization": `Bearer ${session}`,
+        },
+      })
+      .then((res) => res.data),
+  deleteFont: (id: number) =>
+    springInstance
+      .delete(`fonts/${id}`, {
+        headers: {
+          "Authorization": `Bearer ${session}`,
+        },
+      })
+      .then(() => {}),
 };
+
+export function useGetFonts() {
+  return useQuery<FontsDetail[]>({
+    queryKey: ["fontList"],
+    queryFn: () => fontApi.fetchFonts(),
+  });
+}
+
+export function useCreateFont() {
+  const queryClient = useQueryClient();
+  return useMutation<void, unknown, FontsPayload>({
+    mutationFn: (payload) => fontApi.createFont(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["fontList"] });
+    },
+  });
+}
+
+export function useDeleteFont() {
+  const queryClient = useQueryClient();
+  return useMutation<void, unknown, number>({
+    mutationFn: (id) => fontApi.deleteFont(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["fontList"] });
+    },
+  });
+}

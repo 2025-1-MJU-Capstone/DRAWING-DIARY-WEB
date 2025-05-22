@@ -21,20 +21,27 @@ interface ChangePasswordPayload {
 }
 
 export const authApi = {
-  login: async (credentials: AuthCredentials): Promise<AuthTokens> => {
-    const { data } = await springInstance.post<AuthTokens>(
+  login: async (credentials: AuthCredentials) => {
+    console.log(credentials);
+    const res = await springInstance.post<AuthTokens>(
       "auth/login",
       credentials
     );
-    return data;
+    return res.data;
   },
-  signup: async (payload: SignUpPayload): Promise<void> => {
+  signup: async (payload: SignUpPayload) => {
     await springInstance.post("auth/signup", payload);
   },
-  logout: async (): Promise<void> => {
+  logout: async () => {
     await springInstance.post("auth/logout");
   },
-  getMember: async (payload: ChangePasswordPayload): Promise<void> => {
+  refresh: async (refresh: string) => {
+    const res = await springInstance.post<AuthTokens>("auth/refresh", {
+      refreshToken: refresh,
+    });
+    return res.data;
+  },
+  getMember: async (payload: ChangePasswordPayload) => {
     await springInstance.patch("members/password", payload);
   },
 };

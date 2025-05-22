@@ -1,6 +1,7 @@
+// src/hooks/useDiary.ts
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { springInstance } from "@/src/utils/axios-instance";
 
-// Request & Response Interfaces
 export interface CreateDiaryPayload {
   diaryDate: string;
   title: string;
@@ -32,44 +33,71 @@ export interface CreatedDiaryResponse {
   createdAt: string;
 }
 
-export const diaryApi = {
-  // 일기 생성 + 이미지 생성
-  createDiary: async (
-    payload: CreateDiaryPayload
-  ): Promise<CreatedDiaryResponse> => {
-    const { data } = await springInstance.post<CreatedDiaryResponse>(
-      "/api/diaries",
-      payload
-    );
-    return data;
-  },
+const diaryApi = {
+  createDiary: (payload: CreateDiaryPayload) =>
+    springInstance
+      .post<CreatedDiaryResponse>("/api/diaries", payload)
+      .then((res) => res.data),
 
-  // 월별 일기 목록 조회
-  getDiariesByMonth: async (
-    year: number,
-    month: number
-  ): Promise<DiaryItem[]> => {
-    const { data } = await springInstance.get<DiaryItem[]>(
-      `/api/diaries?year=${year}&month=${String(month).padStart(2, "0")}`
-    );
-    return data;
-  },
+  getDiariesByMonth: (year: number, month: number) =>
+    springInstance
+      .get<DiaryItem[]>(
+        `/api/diaries?year=${year}&month=${String(month).padStart(2, "0")}`
+      )
+      .then((res) => res.data),
 
-  // 특정 일기 상세 조회
-  getDiaryDetail: async (id: number): Promise<DiaryDetail> => {
-    const { data } = await springInstance.get<DiaryDetail>(
-      `/api/diaries/${id}`
-    );
-    return data;
-  },
+  getDiaryDetail: (id: number) =>
+    springInstance
+      .get<DiaryDetail>(`/api/diaries/${id}`)
+      .then((res) => res.data),
 
-  // 특정 일기 삭제
-  deleteDiary: async (id: number): Promise<void> => {
-    await springInstance.delete(`/api/diaries/${id}`);
-  },
+  deleteDiary: (id: number) =>
+    springInstance.delete(`/api/diaries/${id}`).then(() => {}),
 
-  // 일기 폰트 변경
-  updateDiaryFont: async (id: number, fontId: number): Promise<void> => {
-    await springInstance.patch(`/api/diaries/${id}/font`, { fontId });
-  },
+  updateDiaryFont: (id: number, fontId: number) =>
+    springInstance.patch(`/api/diaries/${id}/font`, { fontId }).then(() => {}),
 };
+
+export function useGetDiariesByMonth(year: number, month: number) {
+  return useQuery<DiaryItem[]>({
+    queryKey: ["diariesByMonth", year, month],
+    queryFn: () => diaryApi.getDiariesByMonth(year, month),
+  });
+}
+
+export function useGetDiaryDetail(id: number) {
+  return useQuery<DiaryDetail>({
+    queryKey: ["diaryDetail", id],
+    queryFn: () => diaryApi.getDiaryDetail(id),
+  });
+}
+
+export function useCreateDiary() {
+  const queryClient = useQueryClient();
+  return useMutation<CreatedDiaryResponse, unknown, CreateDiaryPayload>({
+    mutationFn: (payload) => diaryApi.createDiary(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diariesByMonth"] });
+    },
+  });
+}
+
+export function useDeleteDiary() {
+  const queryClient = useQueryClient();
+  return useMutation<void, unknown, number>({
+    mutationFn: (id) => diaryApi.deleteDiary(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["diariesByMonth"] });
+    },
+  });
+}
+
+export function useUpdateDiaryFont() {
+  const queryClient = useQueryClient();
+  return useMutation<void, unknown, { id: number; fontId: number }>({
+    mutationFn: ({ id, fontId }) => diaryApi.updateDiaryFont(id, fontId),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ["diaryDetail", id] });
+    },
+  });
+}
