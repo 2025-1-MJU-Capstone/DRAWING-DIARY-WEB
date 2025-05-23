@@ -1,5 +1,10 @@
-// src/hooks/useDiary.ts
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  UseQueryOptions,
+  QueryKey,
+} from "@tanstack/react-query";
 import { springInstance } from "@/src/utils/axios-instance";
 import { DiaryEntry } from "../store/diary/month-list.store";
 
@@ -56,11 +61,15 @@ const diaryApi = {
 export function useGetDiariesByMonth(
   year: number,
   month: number,
-  p0: { onSuccess: (list: DiaryEntry[]) => void; staleTime: number }
+  options: Omit<
+    UseQueryOptions<DiaryEntry[], Error, DiaryEntry[], QueryKey>,
+    "queryKey" | "queryFn"
+  > = {}
 ) {
   return useQuery<DiaryEntry[]>({
     queryKey: ["diariesByMonth", year, month],
     queryFn: () => diaryApi.getDiariesByMonth(year, month),
+    ...options,
   });
 }
 
