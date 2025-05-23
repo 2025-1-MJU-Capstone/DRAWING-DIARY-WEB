@@ -14,12 +14,9 @@ export default function useCalendar({
   year: number;
   month: number;
 }) {
-  const { diaryList, setDiaryList, setSelectedDiary } = useMonthDiaryStore();
+  const { diaryList, setSelectedDiary } = useMonthDiaryStore();
 
-  const { isLoading, error } = useGetDiariesByMonth(year, month, {
-    onSuccess: setDiaryList,
-    staleTime: 1000 * 60 * 5,
-  });
+  const { isLoading, error } = useGetDiariesByMonth(year, month);
 
   const markingDates = useMemo<Record<string, Marking>>(
     () =>
