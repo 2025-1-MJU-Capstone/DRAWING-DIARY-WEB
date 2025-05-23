@@ -1,6 +1,7 @@
 import { StyleSheet, View } from "react-native";
 import { Calendar } from "react-native-calendars";
 import useCalendar from "../business/use-calender.hooks";
+import { useState } from "react";
 interface DateDataType {
   dateString: string;
   day: number;
@@ -10,12 +11,21 @@ interface DateDataType {
 }
 
 export default function CustomCalender() {
-  const { markingDates, selectingDay } = useCalendar();
+  const date = new Date();
+  const [month, setMonth] = useState(date.getMonth() + 1);
+  const [year, setYear] = useState(date.getFullYear());
+  const { markingDates, selectingDay } = useCalendar({
+    month: month,
+    year: year,
+  });
 
   return (
     <View style={styles.container}>
       <Calendar
-        //onMonthChange 속성 추가하기
+        onMonthChange={(dateData: DateDataType) => {
+          setYear(dateData.year);
+          setMonth(dateData.month);
+        }}
         markedDates={markingDates}
         onDayPress={(dateData: DateDataType) => {
           selectingDay(dateData.dateString);

@@ -1,33 +1,42 @@
 import { useCallback, useMemo } from "react";
-import {
-  DiaryEntry,
-  useMonthDiaryStore,
-} from "../stores/store/diary/month-list";
+import { useGetDiariesByMonth } from "@/src/stores/query/diary";
+import { useMonthDiaryStore } from "@/src/stores/store/diary/month-list.store";
 
 type Marking = {
   marked: boolean;
   dotColor: "red" | "green" | "blue" | "yellow";
 };
-export default function useCalendar() {
-  const { diaryList, setSelectedDiary } = useMonthDiaryStore();
 
-  const markingDates = useMemo<Record<string, Marking>>(() => {
-    return diaryList.reduce((acc, { diaryDate }) => {
-      acc[diaryDate] = { marked: true, dotColor: "green" };
-      return acc;
-    }, {} as Record<string, Marking>);
-  }, [diaryList]);
+export default function useCalendar({
+  year,
+  month,
+}: {
+  year: number;
+  month: number;
+}) {
+  const { diaryList, setDiaryList, setSelectedDiary } = useMonthDiaryStore();
 
-  const selectingDay = useCallback(
-    (selectedDate: string): void => {
-      const element = diaryList.find(
-        (value) => value.diaryDate === selectedDate
-      );
-      setSelectedDiary(element);
-    },
+  const { isLoading, error } = useGetDiariesByMonth(year, month, {
+    onSuccess: setDiaryList,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const markingDates = useMemo<Record<string, Marking>>(
+    () =>
+      diaryList.reduce((acc, { diaryDate }) => {
+        acc[diaryDate] = { marked: true, dotColor: "green" };
+        return acc;
+      }, {} as Record<string, Marking>),
     [diaryList]
   );
 
-  // 초기렌더링시 그림일기 월별조회 쿼리문 날리고 그 이후 markingDates 진행하는 useEffect 훅 추가하기
-  return { markingDates, selectingDay };
+  const selectingDay = useCallback(
+    (selectedDate: string) => {
+      const diary = diaryList.find((d) => d.diaryDate === selectedDate);
+      setSelectedDiary(diary);
+    },
+    [diaryList, setSelectedDiary]
+  );
+
+  return { markingDates, selectingDay, isLoading, error };
 }
