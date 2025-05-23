@@ -22,7 +22,6 @@ interface ChangePasswordPayload {
 
 export const authApi = {
   login: async (credentials: AuthCredentials) => {
-    console.log(credentials);
     const res = await springInstance.post<AuthTokens>(
       "auth/login",
       credentials
