@@ -1,6 +1,6 @@
-import { useCallback, useMemo } from "react";
-import { useGetDiariesByMonth } from "@/src/stores/query/diary";
-import { useMonthDiaryStore } from "@/src/stores/store/diary/month-list.store";
+import { useEffect, useMemo, useCallback } from "react";
+import { useMonthDiaryStore } from "../stores/store/diary/month-list.store";
+import { useGetDiariesByMonth } from "../stores/query/diary";
 
 type Marking = {
   marked: boolean;
@@ -14,9 +14,14 @@ export default function useCalendar({
   year: number;
   month: number;
 }) {
-  const { diaryList, setSelectedDiary } = useMonthDiaryStore();
+  const { diaryList, setSelectedDiary, setDiaryList } = useMonthDiaryStore();
+  const { data = [], isLoading } = useGetDiariesByMonth(year, month);
 
-  const { isLoading, error } = useGetDiariesByMonth(year, month);
+  useEffect(() => {
+    if (!isLoading) {
+      setDiaryList(data);
+    }
+  }, [isLoading, data, setDiaryList]);
 
   const markingDates = useMemo<Record<string, Marking>>(
     () =>
@@ -35,5 +40,5 @@ export default function useCalendar({
     [diaryList, setSelectedDiary]
   );
 
-  return { markingDates, selectingDay, isLoading, error };
+  return { markingDates, selectingDay };
 }
