@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,68 +7,196 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import Button from "@/src/components/button";
+import { useDrawingStyle } from "@/src/business/use-drawing-style.hooks";
+import { CreateDiaryPayload, useCreateDiary } from "@/src/stores/query/diary";
+import { router } from "expo-router";
+import useDiary from "@/src/business/use-diary.hooks";
+import { AxiosError } from "axios";
+
+const FormField = ({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) => (
+  <View style={styles.fieldContainer}>
+    <Text style={styles.label}>{label}</Text>
+    {children}
+  </View>
+);
 
 export default function WriteDiary() {
+  const {
+    selectedMood: mood,
+    selectedColor: color,
+    note: customStyle,
+  } = useDrawingStyle();
+  const { serverFonts = [], loading, error } = useDiary();
+
   const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string>("");
   const [extraInfo, setExtraInfo] = useState<string>("");
+  const [fontId, setFontId] = useState<number | null>(serverFonts[0].id);
+  const createDiary = useCreateDiary();
 
-  const canSubmit = title.trim().length > 3 && content.trim().length > 20;
+  const [date, setDate] = useState<Date>(new Date());
+  const [isDatePickerVisible, setDatePickerVisible] = useState<boolean>(false);
 
-  const handleSubmit = () => {
+  const canSubmit =
+    title.trim().length > 3 && content.trim().length > 20 && fontId !== null;
+
+  const toggleDatePicker = useCallback(() => {
+    setDatePickerVisible((prev) => !prev);
+  }, []);
+
+  const handleDateChange = useCallback(
+    (event: DateTimePickerEvent, selected?: Date) => {
+      const current = selected ?? date;
+      setDatePickerVisible(Platform.OS === "ios");
+      if (event.type === "set") {
+        setDate(current);
+      }
+    },
+    [date]
+  );
+
+  const handleSubmit = useCallback(() => {
     if (!canSubmit) return;
-    console.log({ title, content, extraInfo });
-  };
+
+    const payload: CreateDiaryPayload = {
+      diaryDate: date.toISOString().split("T")[0],
+      title,
+      content,
+      fontId: fontId!,
+      feeling: mood || "cinematic",
+      color: color || "crayon",
+      customStyle: `${customStyle} ${extraInfo}`,
+    };
+    console.log(payload);
+
+    createDiary.mutate(payload, {
+      onSuccess: () => {
+        router.push("./home");
+      },
+      onError: (err) => {
+        const error = err as AxiosError;
+        console.error("일기 작성 실패:", error.message);
+      },
+    });
+  }, [
+    canSubmit,
+    date,
+    title,
+    content,
+    fontId,
+    mood,
+    color,
+    customStyle,
+    createDiary,
+  ]);
+
+  if (loading) return <Text>로딩중...</Text>;
+  if (error) return <Text>에러가 발생했습니다.</Text>;
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <Text style={styles.title}>일기쓰기</Text>
-
       <ScrollView
-        contentContainerStyle={styles.textInputContainer}
+        contentContainerStyle={styles.contentContainer}
         keyboardShouldPersistTaps='handled'
       >
-        <TextInput
-          style={styles.inputTitle}
-          placeholder='제목을 입력하세요'
-          placeholderTextColor='#999'
-          value={title}
-          onChangeText={setTitle}
-        />
+        <Text style={styles.title}>일기쓰기</Text>
 
-        <TextInput
-          style={styles.inputContent}
-          placeholder='내용을 입력하세요'
-          placeholderTextColor='#999'
-          value={content}
-          onChangeText={setContent}
-          multiline
-          textAlignVertical='top'
-        />
+        <FormField label='날짜 선택하기'>
+          <TouchableOpacity
+            style={styles.dateButton}
+            onPress={toggleDatePicker}
+          >
+            <Text style={styles.dateText}>
+              {date.toLocaleDateString("ko-KR")}
+            </Text>
+          </TouchableOpacity>
+          {isDatePickerVisible && (
+            <DateTimePicker
+              value={date}
+              mode='date'
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              onChange={handleDateChange}
+            />
+          )}
+        </FormField>
 
-        <View style={styles.divider} />
+        <FormField label='제목'>
+          <TextInput
+            style={styles.inputTitle}
+            placeholder='제목을 입력하세요'
+            placeholderTextColor='#999'
+            value={title}
+            onChangeText={setTitle}
+          />
+        </FormField>
 
-        <TextInput
-          style={styles.inputExtra}
-          placeholder='그림에 참고할만한 추가적인 정보가 있나요? 있다면 작성해주세요!'
-          placeholderTextColor='#999'
-          value={extraInfo}
-          onChangeText={setExtraInfo}
-          multiline={false}
-          returnKeyType='done'
-        />
+        <FormField label='내용'>
+          <TextInput
+            style={styles.inputContent}
+            placeholder='내용을 입력하세요'
+            placeholderTextColor='#999'
+            value={content}
+            onChangeText={setContent}
+            multiline
+            numberOfLines={3}
+            textAlignVertical='top'
+          />
+        </FormField>
+
+        <FormField label='폰트 선택하기'>
+          <View style={styles.pickerWrapper}>
+            <Picker
+              selectedValue={fontId}
+              onValueChange={(value) => setFontId(value)}
+              style={Platform.OS === "ios" ? styles.pickerIOS : styles.picker}
+              itemStyle={Platform.OS === "ios" ? { height: 120 } : undefined}
+              dropdownIconColor='#000'
+            >
+              {serverFonts.map((font) => (
+                <Picker.Item
+                  key={font.id}
+                  label={font.fontName}
+                  value={font.id}
+                />
+              ))}
+            </Picker>
+          </View>
+        </FormField>
+
+        <FormField label='추가 정보'>
+          <TextInput
+            style={styles.inputExtra}
+            placeholder='추가 정보가 있나요?'
+            placeholderTextColor='#999'
+            value={extraInfo}
+            onChangeText={setExtraInfo}
+            returnKeyType='done'
+          />
+        </FormField>
 
         <View style={styles.buttonContainer}>
           <Button
             theme='primary'
-            label='제출하기'
             backgroundColor={canSubmit ? "#FFECA5" : "#E0E0E0"}
-            onPress={canSubmit ? handleSubmit : undefined}
+            label='제출하기'
+            onPress={handleSubmit}
+            disabled={!canSubmit}
           />
         </View>
       </ScrollView>
@@ -77,34 +205,37 @@ export default function WriteDiary() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingVertical: 70,
-    paddingHorizontal: 30,
-    backgroundColor: "#FFFDF8",
-  },
+  container: { flex: 1, backgroundColor: "#FFFDF8" },
+  contentContainer: { paddingHorizontal: 30, paddingVertical: 70 },
   title: {
     fontSize: 24,
     fontWeight: "600",
     textAlign: "center",
     marginBottom: 20,
   },
-  textInputContainer: {
-    flexGrow: 1,
+  fieldContainer: { marginBottom: 16 },
+  label: { fontSize: 14, fontWeight: "500", marginBottom: 8 },
+  dateButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
   },
+  dateText: { fontSize: 16 },
   inputTitle: {
-    width: "100%",
     height: 50,
     borderWidth: 1,
     borderColor: "#E0E0E0",
     borderRadius: 10,
     paddingHorizontal: 15,
     backgroundColor: "#FFFFFF",
-    marginBottom: 16,
     fontFamily: "Pretendard",
   },
   inputContent: {
     flex: 1,
+    minHeight: 160,
     borderWidth: 1,
     borderColor: "#E0E0E0",
     borderRadius: 10,
@@ -112,14 +243,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     fontFamily: "Pretendard",
   },
-  divider: {
-    height: 1,
-    backgroundColor: "#E0E0E0",
-    marginVertical: 16,
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 10,
+    overflow: "hidden",
+    backgroundColor: "#FFFFFF",
   },
+  picker: { width: "100%", height: 44 },
+  pickerIOS: { width: "100%", height: 120 },
   inputExtra: {
-    width: "100%",
-    height: 40, // 한 줄 높이
+    height: 40,
     borderWidth: 1,
     borderColor: "#E0E0E0",
     borderRadius: 10,
@@ -127,8 +261,5 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     fontFamily: "Pretendard",
   },
-  buttonContainer: {
-    marginVertical: 20,
-    alignItems: "center",
-  },
+  buttonContainer: { marginTop: 20, alignItems: "center" },
 });
