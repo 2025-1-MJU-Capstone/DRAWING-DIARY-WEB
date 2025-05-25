@@ -8,19 +8,19 @@ import {
   TouchableOpacity,
 } from "react-native";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { useGetDiaryDetail } from "@/src/stores/query/diary";
 
 export default function DetailDiary() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  // TODO: id로 API 호출해서 diary 데이터를 가져오세요
-  // 예시 데이터
-  const diary = {
-    diaryDate: "2025-05-22",
-    title: "소중한 하루",
-    imageUrl: "https://example.com/path/to/image.jpg",
-    content:
-      "오늘은 프로젝트 마감 전 마지막 점검을 했어요. 많은 버그를 잡고 UI도 다듬었더니 성취감이 컸습니다 😊",
-  };
+  const { data: diary, isLoading, error } = useGetDiaryDetail(Number(id));
+
+  if (isLoading) {
+    return <Text>로딩 중…</Text>;
+  }
+  if (error || !diary) {
+    return <Text>일기를 불러오는 중 오류가 발생했습니다.</Text>;
+  }
 
   return (
     <View style={styles.wrapper}>
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: 220,
+    height: 400,
     borderRadius: 12,
     backgroundColor: "#E0E0E0",
     marginBottom: 24,
