@@ -2,12 +2,7 @@ import { springInstance } from "@/src/utils/axios-instance";
 import { useStorageState } from "@/src/utils/secure-storage-state";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-interface FontsPayload {
-  images: File;
-  fontName: string;
-}
-
-interface FontsDetail {
+export interface FontsDetail {
   id: number;
   fontName: string;
   ttfUrl: string;
@@ -17,34 +12,14 @@ export interface PatchFontParams {
   fontId: number;
 }
 
-const [session] = useStorageState("session");
-
 const fontApi = {
-  createFont: (payload: FontsPayload) =>
-    springInstance
-      .post("/fonts", payload, {
-        headers: {
-          "Authorization": `Bearer ${session}`,
-          "Content-Type": "multipart/form-data",
-        },
-      })
-      .then(() => {}),
+  createFont: (payload: FormData) =>
+    springInstance.post("fonts", payload).then(() => {}),
+
   fetchFonts: () =>
-    springInstance
-      .get<FontsDetail[]>("/fonts", {
-        headers: {
-          "Authorization": `Bearer ${session}`,
-        },
-      })
-      .then((res) => res.data),
+    springInstance.get<FontsDetail[]>("fonts").then((res) => res.data),
   deleteFont: (id: number) =>
-    springInstance
-      .delete(`fonts/${id}`, {
-        headers: {
-          "Authorization": `Bearer ${session}`,
-        },
-      })
-      .then(() => {}),
+    springInstance.delete(`fonts/${id}`).then(() => {}),
 };
 
 export function useGetFonts() {
@@ -56,10 +31,13 @@ export function useGetFonts() {
 
 export function useCreateFont() {
   const queryClient = useQueryClient();
-  return useMutation<void, unknown, FontsPayload>({
+  return useMutation<void, unknown, FormData>({
     mutationFn: (payload) => fontApi.createFont(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["fontList"] });
+    },
+    onError: (error) => {
+      console.log("Error 객체:", error);
     },
   });
 }

@@ -1,11 +1,21 @@
-// src/app/(landing)/font-make.tsx
 import usePickImage from "@/src/business/use-pick-image.hooks";
 import Button from "@/src/components/button";
-import { router } from "expo-router";
+import { useCreateFont } from "@/src/stores/query/font";
+import { useRouter } from "expo-router";
 import { Pressable, Image, StyleSheet, Text, View } from "react-native";
 
 export default function FontMake() {
-  const { imageUri, pickImage, reset } = usePickImage();
+  const { imageUri, pickImage, formDataMaker } = usePickImage();
+  const createFont = useCreateFont();
+  const router = useRouter();
+  const handleSubmit = async () => {
+    if (!imageUri) return;
+    const formData = await formDataMaker(imageUri, "custom2");
+    createFont.mutate(formData, {
+      onSuccess: () => router.push("/(landing)/drawing-style"),
+      onError: (err) => console.error(err),
+    });
+  };
 
   return (
     <View style={styles.container}>
@@ -59,7 +69,7 @@ export default function FontMake() {
           theme='primary'
           label='제출하기'
           backgroundColor='#FFECA5'
-          onPress={() => router.push("/(landing)/drawing-style")}
+          onPress={handleSubmit}
         />
         <Button
           theme='primary'

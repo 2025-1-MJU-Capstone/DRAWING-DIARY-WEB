@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import * as ImagePicker from "expo-image-picker";
+import { Platform } from "react-native";
 
 export default function usePickImage() {
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -40,5 +41,24 @@ export default function usePickImage() {
     setImageUri(null);
   };
 
-  return { imageUri, pickImage, reset };
+  const formDataMaker = async (uri: string, fontName: string) => {
+    const uriWithoutPrefix =
+      Platform.OS === "android" ? uri : uri.replace("file://", "");
+    const uriParts = uriWithoutPrefix.split(".");
+    const fileType = uriParts[uriParts.length - 1];
+
+    const response = await fetch(uriWithoutPrefix);
+    const blob = await response.blob();
+    const file = new File([blob], `handwriting.${fileType}`, {
+      type: blob.type,
+    });
+
+    const formData = new FormData();
+    formData.append("images", file);
+    formData.append("fontName", fontName);
+
+    return formData;
+  };
+
+  return { imageUri, pickImage, reset, formDataMaker };
 }
