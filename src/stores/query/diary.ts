@@ -1,17 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { springInstance } from "@/src/utils/axios-instance";
-import {
-  DiaryEntry,
-  useMonthDiaryStore,
-} from "../store/diary/month-list.store";
+import { DiaryEntry } from "../store/diary/month-list.store";
 
 export interface CreateDiaryPayload {
   diaryDate: string;
   title: string;
   content: string;
   fontId: number;
-  feeling: string;
-  color: string;
+  feeling: "realistic" | "cinematic" | "storybook";
+  color: "crayon" | "paint" | "pencil";
   customStyle: string;
 }
 
@@ -33,35 +30,38 @@ export interface CreatedDiaryResponse {
 const diaryApi = {
   createDiary: (payload: CreateDiaryPayload) =>
     springInstance
-      .post<CreatedDiaryResponse>("/api/diaries", payload)
+      .post<CreatedDiaryResponse>("diaries", payload)
       .then((res) => res.data),
 
-  getDiariesByMonth: (year: number, month: number) =>
-    springInstance
+  getDiariesByMonth: (year: number, month: number) => {
+    return springInstance
       .get<DiaryEntry[]>(
-        `/api/diaries?year=${year}&month=${String(month).padStart(2, "0")}`
+        `diaries?year=${year}&month=${String(month).padStart(2, "0")}`
       )
-      .then((res) => res.data),
+      .then((res) => {
+        return res.data;
+      })
+      .catch((e) => {
+        console.log(e);
+        return [];
+      });
+  },
 
   getDiaryDetail: (id: number) =>
-    springInstance
-      .get<DiaryDetail>(`/api/diaries/${id}`)
-      .then((res) => res.data),
+    springInstance.get<DiaryDetail>(`diaries/${id}`).then((res) => res.data),
 
   deleteDiary: (id: number) =>
-    springInstance.delete(`/api/diaries/${id}`).then(() => {}),
+    springInstance.delete(`diaries/${id}`).then(() => {}),
 
   updateDiaryFont: (id: number, fontId: number) =>
-    springInstance.patch(`/api/diaries/${id}/font`, { fontId }).then(() => {}),
+    springInstance.patch(`diaries/${id}/font`, { fontId }).then(() => {}),
 };
 
-const { setDiaryList } = useMonthDiaryStore();
 export function useGetDiariesByMonth(year: number, month: number) {
-  return useQuery({
+  return useQuery<DiaryEntry[]>({
     queryKey: ["diariesByMonth", year, month],
     queryFn: () => diaryApi.getDiariesByMonth(year, month),
     staleTime: 1000,
-    select: (data) => setDiaryList(data),
   });
 }
 
