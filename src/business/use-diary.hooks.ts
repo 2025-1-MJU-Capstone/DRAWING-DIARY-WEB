@@ -21,14 +21,14 @@ const notDownloadedFonts = (
   serverData: FontsDetail[],
   localData: FontsDetail[]
 ): FontsDetail[] =>
-  serverData.filter((s) => !localData.some((l) => l.fontName === s.fontName));
+  serverData.filter((s) => !localData.some((l) => l.id === s.id));
 
 const registerFonts = async (fonts: FontsDetail[]) => {
   try {
     const entries = await Promise.all(
       fonts.map(async (f) => {
-        const uri = await fileDownload(f.ttfUrl, f.fontName);
-        return uri ? { [f.fontName]: uri } : null;
+        const uri = await fileDownload(f.ttfUrl, f.id.toString());
+        return uri ? { [f.id.toString()]: uri } : null;
       })
     );
     const valid = entries.filter((e): e is Record<string, string> => !!e);
@@ -46,7 +46,9 @@ export default function useDiary() {
     if (fetching || !serverFonts) return;
 
     (async () => {
-      const localFonts = await readLocalFonts();
+      const localFonts = (await readLocalFonts()).filter((v) =>
+        Font.getLoadedFonts().includes(v.id.toString())
+      );
 
       const toDownload = notDownloadedFonts(serverFonts, localFonts);
 

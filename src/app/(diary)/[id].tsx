@@ -9,13 +9,18 @@ import {
 } from "react-native";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useGetDiaryDetail } from "@/src/stores/query/diary";
+import useDiary from "@/src/business/use-diary.hooks";
 
 export default function DetailDiary() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { data: diary, isLoading, error } = useGetDiaryDetail(Number(id));
 
-  if (isLoading) {
+  const { data: diary, isLoading, error } = useGetDiaryDetail(Number(id));
+  const { serverFonts, loading: fontsLoading } = useDiary();
+  if (!serverFonts || !diary)
+    return <Text>폰트를 불러오는 중 오류가 발생했습니다.</Text>;
+
+  if (isLoading || fontsLoading) {
     return <Text>로딩 중…</Text>;
   }
   if (error || !diary) {
@@ -45,7 +50,11 @@ export default function DetailDiary() {
         <Image source={{ uri: diary.imageUrl }} style={styles.image} />
 
         <View style={styles.contentContainer}>
-          <Text style={styles.content}>{diary.content}</Text>
+          <Text
+            style={[styles.content, { fontFamily: diary.fontId.toString() }]}
+          >
+            {diary.content}
+          </Text>
         </View>
       </ScrollView>
     </View>

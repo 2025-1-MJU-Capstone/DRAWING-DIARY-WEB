@@ -40,7 +40,6 @@ export default function WriteDiary() {
     note: customStyle,
   } = useDrawingStyle();
   const { serverFonts = [], loading, error } = useDiary();
-
   const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string>("");
   const [extraInfo, setExtraInfo] = useState<string>("");
