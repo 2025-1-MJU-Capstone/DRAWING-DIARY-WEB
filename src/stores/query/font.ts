@@ -11,15 +11,24 @@ export interface FontsDetail {
 export interface PatchFontParams {
   fontId: number;
 }
+interface fontImage {
+  url: string;
+}
 
 const fontApi = {
   createFont: (payload: FormData) =>
-    springInstance.post("fonts", payload).then(() => {}),
+    springInstance
+      .post("fonts", payload)
+      .then(() => {})
+      .catch((e) => console.log(e.message)),
 
   fetchFonts: () =>
     springInstance.get<FontsDetail[]>("fonts").then((res) => res.data),
   deleteFont: (id: number) =>
     springInstance.delete(`fonts/${id}`).then(() => {}),
+
+  getImage: () =>
+    springInstance.get<fontImage>("fonts/image").then((res) => res.data),
 };
 
 export function useGetFonts() {
@@ -49,5 +58,12 @@ export function useDeleteFont() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["fontList"] });
     },
+  });
+}
+
+export function useGetImage() {
+  return useQuery<fontImage>({
+    queryKey: ["fontImage"],
+    queryFn: () => fontApi.getImage(),
   });
 }

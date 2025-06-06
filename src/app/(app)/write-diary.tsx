@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -39,15 +39,26 @@ export default function WriteDiary() {
     selectedColor: color,
     note: customStyle,
   } = useDrawingStyle();
+
   const { serverFonts = [], loading, error } = useDiary();
+
+  useEffect(() => {
+    if (!loading && serverFonts.length === 0) {
+      router.push("../(landing)/font-make");
+    }
+  }, [loading, serverFonts]);
+
+  const createDiary = useCreateDiary();
+
   const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string>("");
   const [extraInfo, setExtraInfo] = useState<string>("");
-  const [fontId, setFontId] = useState<number | null>(serverFonts[0].id);
-  const createDiary = useCreateDiary();
-
+  const [fontId, setFontId] = useState<number | null>(
+    serverFonts.length > 0 ? serverFonts[0].id : null
+  );
   const [date, setDate] = useState<Date>(new Date());
   const [isDatePickerVisible, setDatePickerVisible] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const canSubmit =
     title.trim().length > 3 && content.trim().length > 20 && fontId !== null;
@@ -69,6 +80,7 @@ export default function WriteDiary() {
 
   const handleSubmit = useCallback(() => {
     if (!canSubmit) return;
+    setIsLoading(true);
 
     const payload: CreateDiaryPayload = {
       diaryDate: date.toISOString().split("T")[0],
@@ -79,15 +91,15 @@ export default function WriteDiary() {
       color: color || "crayon",
       customStyle: `${customStyle} ${extraInfo}`,
     };
-    console.log(payload);
 
     createDiary.mutate(payload, {
       onSuccess: () => {
+        setIsLoading(false);
         router.push("./home");
       },
       onError: (err) => {
-        const error = err as AxiosError;
-        console.error("일기 작성 실패:", error.message);
+        const axiosErr = err as AxiosError;
+        console.error("일기 작성 실패:", axiosErr.message);
       },
     });
   }, [
@@ -99,11 +111,25 @@ export default function WriteDiary() {
     mood,
     color,
     customStyle,
+    extraInfo,
     createDiary,
   ]);
 
-  if (loading) return <Text>로딩중...</Text>;
-  if (error) return <Text>에러가 발생했습니다.</Text>;
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <Text>로딩 중…</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.centered}>
+        <Text>오류가 발생했습니다.</Text>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -114,7 +140,7 @@ export default function WriteDiary() {
         contentContainerStyle={styles.contentContainer}
         keyboardShouldPersistTaps='handled'
       >
-        <Text style={styles.title}>일기쓰기</Text>
+        <Text style={styles.title}>일기 쓰기</Text>
 
         <FormField label='날짜 선택하기'>
           <TouchableOpacity
@@ -193,7 +219,7 @@ export default function WriteDiary() {
           <Button
             theme='primary'
             backgroundColor={canSubmit ? "#FFECA5" : "#E0E0E0"}
-            label='제출하기'
+            label={isLoading ? "로딩중,,," : "제출하기"}
             onPress={handleSubmit}
             disabled={!canSubmit}
           />
@@ -261,4 +287,9 @@ const styles = StyleSheet.create({
     fontFamily: "Pretendard",
   },
   buttonContainer: { marginTop: 20, alignItems: "center" },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });

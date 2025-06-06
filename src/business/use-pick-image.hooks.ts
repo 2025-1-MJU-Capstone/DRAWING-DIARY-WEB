@@ -1,17 +1,23 @@
 import { useState, useCallback } from "react";
 import * as ImagePicker from "expo-image-picker";
-import { Platform } from "react-native";
+import * as MediaLibrary from "expo-media-library";
+import * as FileSystem from "expo-file-system";
+import { Platform, Alert } from "react-native";
+import { useQuery } from "@tanstack/react-query";
+import { useGetImage } from "../stores/query/font";
 
 export default function usePickImage() {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [permission, requestPermission] =
     ImagePicker.useMediaLibraryPermissions();
+  const { data: imageData } = useGetImage();
 
   const pickImage = useCallback(async (): Promise<string | null> => {
-    const { granted } = permission?.granted
+    const currentPerm = permission?.granted
       ? permission
       : await requestPermission();
-    if (!granted) {
+
+    if (!currentPerm.granted) {
       console.warn("Media library permission denied");
       return null;
     }
@@ -37,6 +43,47 @@ export default function usePickImage() {
     }
   }, [permission, requestPermission]);
 
+  const saveImage = useCallback(async (): Promise<boolean> => {
+    const remoteUrl = imageData?.url;
+    if (!remoteUrl) {
+      Alert.alert("저장할 이미지가 없습니다.", "이미지를 불러와주세요.");
+      return false;
+    }
+
+    const currentPerm = permission?.granted
+      ? permission
+      : await requestPermission();
+
+    if (!currentPerm.granted) {
+      Alert.alert(
+        "저장 권한이 필요합니다.",
+        "갤러리에 저장하려면 권한을 허용해주세요."
+      );
+      return false;
+    }
+
+    try {
+      const fileName = remoteUrl.split("/").pop() || "downloaded_image";
+      const downloadResult = await FileSystem.downloadAsync(
+        remoteUrl,
+        FileSystem.cacheDirectory + fileName
+      );
+      const uriForSave =
+        Platform.OS === "android"
+          ? downloadResult.uri
+          : downloadResult.uri.replace("file://", "");
+
+      await MediaLibrary.createAssetAsync(uriForSave);
+
+      Alert.alert("저장 완료", "갤러리에 이미지가 저장되었습니다.");
+      return true;
+    } catch (e) {
+      console.error("이미지 저장 중 오류:", e);
+      Alert.alert("저장 실패", "갤러리를 저장하는 중 오류가 발생했습니다.");
+      return false;
+    }
+  }, [imageData, permission, requestPermission]);
+
   const reset = () => {
     setImageUri(null);
   };
@@ -60,5 +107,5 @@ export default function usePickImage() {
     return formData;
   };
 
-  return { imageUri, pickImage, reset, formDataMaker };
+  return { imageUri, pickImage, saveImage, reset, formDataMaker };
 }

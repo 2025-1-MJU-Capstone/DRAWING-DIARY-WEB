@@ -124,9 +124,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   content: {
-    fontSize: 16,
-    lineHeight: 26,
-    color: "#444",
+    fontSize: 19,
+    color: "#000",
     fontFamily: "Pretendard",
   },
 });

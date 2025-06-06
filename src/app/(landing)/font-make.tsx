@@ -5,12 +5,13 @@ import { useRouter } from "expo-router";
 import { Pressable, Image, StyleSheet, Text, View } from "react-native";
 
 export default function FontMake() {
-  const { imageUri, pickImage, formDataMaker } = usePickImage();
+  const { imageUri, pickImage, formDataMaker, saveImage } = usePickImage();
   const createFont = useCreateFont();
   const router = useRouter();
+  const date = new Date();
   const handleSubmit = async () => {
     if (!imageUri) return;
-    const formData = await formDataMaker(imageUri, "custom2");
+    const formData = await formDataMaker(imageUri, `${date.getDate} demo`);
     createFont.mutate(formData, {
       onSuccess: () => router.push("/(landing)/drawing-style"),
       onError: (err) => console.error(err),
@@ -23,7 +24,7 @@ export default function FontMake() {
 
       <View style={styles.article}>
         <Text>손글씨를 폰트로 만들어드릴께요!</Text>
-        <Text>아래 글자를 종이에 찍어서 업로드해주세요!</Text>
+        <Text>아래 글자를 이미지에 찍어서 업로드해주세요!</Text>
         <Text></Text>
         <Text>안 / 녕 / 하 / 세 / 요 / 만 / 나 / 서 / 반 / 가 / 워 / 요</Text>
         <Text></Text>
@@ -38,6 +39,12 @@ export default function FontMake() {
             <Pressable onPress={pickImage} style={styles.imagePreview}>
               <Text>사진 미리보기</Text>
             </Pressable>
+            <Button
+              theme='primary'
+              label='이미지 다운로드'
+              onPress={saveImage}
+              backgroundColor='#D9D9D9'
+            />
             <Button
               onPress={pickImage}
               theme='primary'
